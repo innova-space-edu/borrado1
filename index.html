@@ -3,130 +3,102 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIRA AI - Chat</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>MIRA AI - Asistente Inteligente</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
-    body {
-      background: linear-gradient(to bottom right, #f0f4ff, #d6e0ff);
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .avatar {
-      position: fixed;
-      top: 10px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-    .chat-box {
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
-    }
-    .message-area {
-      height: 500px;
-      overflow-y: auto;
-      border-radius: 10px;
-      padding: 15px;
-      background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    .input-box {
-      display: flex;
-      margin-top: 10px;
-    }
-    .input-box input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 30px;
-    }
-    .input-box button {
-      background: linear-gradient(to right, #7f7fd5, #86a8e7);
-      color: white;
-      padding: 10px 20px;
-      margin-left: 10px;
-      border-radius: 20px;
-      border: none;
-    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+    .mensaje-usuario { text-align: right; background-color: #dcf8c6; align-self: flex-end; }
+    .mensaje-mira { text-align: left; background-color: #e6e6e6; align-self: flex-start; }
+    .mensaje { padding: 10px 15px; margin: 5px; border-radius: 16px; max-width: 75%; }
+    #avatar-mira { position: fixed; bottom: 80px; right: 20px; width: 60px; height: 60px; transition: transform 0.3s ease; cursor: grab; }
+    #avatar-mira.moviendo { transform: scale(1.1) rotate(5deg); }
+    #panel-login { position: fixed; top: 0; right: 0; width: 300px; background: #f0f0f0; height: 100%; padding: 20px; box-shadow: -2px 0 10px rgba(0,0,0,0.1); z-index: 50; }
   </style>
 </head>
-<body>
-  <img src="assets/avatar-mira.png" alt="MIRA Avatar" class="avatar" id="avatar" />
+<body class="bg-gray-100 flex flex-col h-screen">
+  <header class="bg-white shadow p-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-800">MIRA AI</h1>
+  </header>
 
-  <div class="chat-box">
-    <div class="message-area" id="chat"></div>
-    <div id="typing-indicator" class="text-gray-500 mt-2 hidden">MIRA está escribiendo...</div>
-
-    <div class="input-box">
-      <input type="text" id="user-input" placeholder="Escribe tu mensaje..." />
-      <button onclick="sendMessage()">Enviar</button>
-      <input type="file" id="image-upload" title="Sube una imagen" />
-    </div>
-
-    <div id="login-section" class="mt-8 p-6 rounded-xl bg-white shadow-md max-w-sm mx-auto">
-      <h2 class="text-xl font-bold mb-2">Iniciar sesión</h2>
-      <input type="email" id="email" placeholder="Correo electrónico" class="mb-2 w-full p-2 border rounded" />
-      <input type="password" id="password" placeholder="Contraseña" class="mb-2 w-full p-2 border rounded" />
-      <button onclick="login()" class="w-full bg-blue-500 text-white py-2 rounded">Entrar</button>
-      <p class="text-sm mt-2">&#191;No tienes cuenta? <a href="#" class="text-blue-600 underline">Regístrate</a></p>
-    </div>
+  <!-- Panel Login -->
+  <div id="panel-login">
+    <h2 class="text-lg font-semibold mb-2">Iniciar sesión</h2>
+    <input type="email" placeholder="Correo electrónico" id="correo" class="w-full mb-2 p-2 border rounded">
+    <input type="password" placeholder="Contraseña" id="clave" class="w-full mb-2 p-2 border rounded">
+    <button onclick="login()" class="bg-blue-500 text-white w-full p-2 rounded">Entrar</button>
+    <p class="text-sm mt-3">¿No tienes cuenta? <a href="#" class="text-blue-600 underline">Regístrate</a></p>
   </div>
 
+  <!-- Chat -->
+  <main id="chat-container" class="flex-1 overflow-y-auto flex flex-col p-4 space-y-2">
+    <div id="chat" class="flex flex-col space-y-2"></div>
+  </main>
+
+  <!-- Input -->
+  <footer class="bg-white p-4 shadow flex items-center">
+    <input id="inputMensaje" type="text" placeholder="Escribe tu mensaje..." class="flex-1 border rounded-full p-3 mr-2">
+    <input type="file" id="imagenInput" class="hidden" accept="image/*">
+    <button onclick="document.getElementById('imagenInput').click()" class="mr-2 text-gray-600">📷</button>
+    <button onclick="enviarMensaje()" class="bg-green-500 text-white px-4 py-2 rounded-full">Enviar</button>
+  </footer>
+
+  <!-- Avatar -->
+  <img id="avatar-mira" src="avatar.png" alt="Avatar de MIRA" draggable="true">
+
+  <!-- Scripts -->
   <script type="module">
     import { auth } from './firebase-config.js';
-    import { login } from './utils/auth.js';
-    import { speak } from './utils/speak.js';
-    import { renderMessage } from './utils/render.js';
-    import { getResponse } from './utils/getResponse.js';
+    import { loginUsuario } from './auth.js';
+    import { speak } from './speak.js';
+    import { renderMensaje } from './render.js';
+    import { getResponse } from './getResponse.js';
 
-    const chatContainer = document.getElementById('chat');
-    const input = document.getElementById('user-input');
-    const typingIndicator = document.getElementById('typing-indicator');
-    const imageInput = document.getElementById('image-upload');
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('inputMensaje');
+    const avatar = document.getElementById('avatar-mira');
 
-    window.login = login;
+    let escribiendo = document.createElement('div');
+    escribiendo.textContent = 'MIRA está escribiendo...';
+    escribiendo.className = 'mensaje mensaje-mira italic';
 
-    window.sendMessage = async () => {
-      const text = input.value.trim();
-      if (!text && !imageInput.files.length) return;
+    function enviarMensaje() {
+      const texto = input.value.trim();
+      if (!texto) return;
 
-      const userMessage = document.createElement('div');
-      userMessage.textContent = text || '[Imagen enviada]';
-      userMessage.className = 'text-right text-blue-600 my-2';
-      chatContainer.appendChild(userMessage);
+      const div = document.createElement('div');
+      div.className = 'mensaje mensaje-usuario';
+      div.innerHTML = texto;
+      chat.appendChild(div);
+
       input.value = '';
+      chat.appendChild(escribiendo);
 
-      typingIndicator.classList.remove('hidden');
-
-      let response = '...';
-
-      if (imageInput.files.length > 0) {
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const imageData = reader.result;
-          response = await getResponse(null, imageData);
-          showResponse(response);
-        };
-        reader.readAsDataURL(imageInput.files[0]);
-      } else {
-        response = await getResponse(text);
-        showResponse(response);
-      }
-    };
-
-    function showResponse(response) {
-      typingIndicator.classList.add('hidden');
-      renderMessage(response);
-      speak(response);
+      getResponse(texto).then(respuesta => {
+        chat.removeChild(escribiendo);
+        renderMensaje(chat, respuesta);
+        speak(respuesta);
+      });
     }
+
+    window.enviarMensaje = enviarMensaje;
+
+    window.login = async function() {
+      const correo = document.getElementById('correo').value;
+      const clave = document.getElementById('clave').value;
+      await loginUsuario(correo, clave);
+      document.getElementById('panel-login').style.display = 'none';
+    }
+
+    // Avatar arrastrable
+    avatar.addEventListener('mousedown', () => avatar.classList.add('moviendo'));
+    avatar.addEventListener('mouseup', () => avatar.classList.remove('moviendo'));
+    avatar.addEventListener('dragend', e => {
+      avatar.style.left = e.pageX + 'px';
+      avatar.style.top = e.pageY + 'px';
+    });
   </script>
 </body>
 </html>
