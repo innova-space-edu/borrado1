@@ -1,39 +1,47 @@
-// utils/database.js
-import { db } from "../firebase-config.js";
+// database.js
+import { db } from './firebase-config.js';
 import {
   collection,
   addDoc,
+  getDocs,
   query,
+  where,
   orderBy,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-export async function saveMessage(userId, role, content) {
-  if (!userId) return;
+/**
+ * Guarda un mensaje en Firestore
+ * @param {string} userId - ID del usuario autenticado
+ * @param {string} role - 'user' o 'assistant'
+ * @param {string} content - Contenido del mensaje
+ */
+export async function guardarMensaje(userId, role, content) {
   try {
-    await addDoc(collection(db, "chats", userId, "mensajes"), {
+    await addDoc(collection(db, 'mensajes'), {
+      userId,
       role,
       content,
-      timestamp: Date.now(),
+      timestamp: serverTimestamp()
     });
   } catch (error) {
-    console.error("Error al guardar mensaje:", error);
+    console.error("Error al guardar el mensaje:", error);
   }
 }
 
-export async function loadMessages(userId, callback) {
-  if (!userId) return;
+/**
+ * Obtiene todos los mensajes de un usuario, ordenados por tiempo
+ * @param {string} userId - ID del usuario autenticado
+ * @returns {Array} - Lista de mensajes del usuario
+ */
+export async function obtenerMensajesUsuario(userId) {
   try {
-    const q = query(
-      collection(db, "chats", userId, "mensajes"),
-      orderBy("timestamp")
-    );
-    const snapshot = await getDocs(q);
-    snapshot.forEach(doc => {
-      const { role, content } = doc.data();
-      callback(role, content);
-    });
+    const mensajesRef = collection(db, 'mensajes');
+    const q = query(mensajesRef, where("userId", "==", userId), orderBy("timestamp", "asc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data());
   } catch (error) {
-    console.error("Error al cargar mensajes:", error);
+    console.error("Error al obtener mensajes:", error);
+    return [];
   }
 }
