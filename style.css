@@ -1,78 +1,203 @@
+/* === GENERALES === */
 body {
-  font-family: "Segoe UI", sans-serif;
   margin: 0;
-  background: #f1f2f7;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+  overflow: hidden;
 }
 
-#chat-container {
-  max-width: 700px;
-  margin: auto;
+h1, h2, h3 {
+  margin: 0;
+}
+
+/* === LOGIN === */
+.login-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  background-color: #e3eaf5;
 }
 
-#chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
+.login-container {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
 }
 
-.msg {
-  max-width: 75%;
-  margin: 10px 0;
-  padding: 12px;
-  border-radius: 18px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.msg.user {
-  background: #d1f0ff;
-  align-self: flex-end;
-  text-align: right;
-}
-
-.msg.assistant {
-  background: #ffffff;
-  align-self: flex-start;
-  text-align: left;
-}
-
-#input-area {
-  display: flex;
-  padding: 12px;
-  background: #fff;
-  border-top: 1px solid #ccc;
-}
-
-#input-area input[type="text"],
-#input-area input[type="file"] {
-  flex: 1;
-  padding: 10px;
-  margin-right: 6px;
-  border-radius: 10px;
+.login-container input,
+.login-container button {
+  display: block;
+  width: 80%;
+  margin: 1rem auto;
+  padding: 0.8rem;
+  border-radius: 0.5rem;
   border: 1px solid #ccc;
 }
 
-#input-area button {
-  padding: 0 14px;
-  border-radius: 10px;
-  background: #7a5af8;
-  color: #fff;
+.login-container button {
+  background-color: #4a90e2;
+  color: white;
   border: none;
+  cursor: pointer;
 }
 
-#avatar-mira {
+.login-container .mira-color {
+  color: #4a90e2;
+}
+
+/* === MODAL REGISTRO === */
+.modal {
+  display: none;
   position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.close {
+  float: right;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* === CHAT === */
+.chat-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  background-color: #ffffff;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  background-color: #eef2f5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.message {
+  max-width: 70%;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  line-height: 1.4;
+  position: relative;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.message.user {
+  align-self: flex-end;
+  background-color: #dcf8c6;
+  text-align: right;
+}
+
+.message.mira {
+  align-self: flex-start;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+}
+
+/* === INPUT === */
+.input-container {
+  display: flex;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-top: 1px solid #ccc;
+  position: relative;
+}
+
+#user-input {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  border-radius: 2rem;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 1rem;
+}
+
+#send-btn {
+  margin-left: 0.5rem;
+  padding: 0.8rem 1.2rem;
+  border: none;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 2rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* === AVATAR === */
+#avatar-mira {
+  position: absolute;
   bottom: 100px;
-  right: 30px;
+  left: 20px;
   width: 60px;
   height: 60px;
-  background: url('https://innova-space-edu.github.io/logo.png') no-repeat center/cover;
-  transition: transform 0.3s ease;
+  background-image: url('avatar.png'); /* cambia por tu imagen */
+  background-size: cover;
+  animation: float 3s ease-in-out infinite;
+  z-index: 10;
 }
 
-#avatar-mira.speaking {
-  transform: scale(1.2) rotate(5deg);
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+/* === MENSAJE TIPING === */
+.typing-indicator {
+  font-style: italic;
+  color: #999;
+  margin-left: 10px;
+}
+
+/* === SCROLL AUTOMÁTICO === */
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+/* === BOTONES FLOTANTES === */
+.scroll-to-bottom {
+  position: absolute;
+  bottom: 90px;
+  right: 20px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  display: none;
 }
