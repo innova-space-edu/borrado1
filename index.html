@@ -2,103 +2,95 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIRA AI - Asistente Inteligente</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <style>
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-    .mensaje-usuario { text-align: right; background-color: #dcf8c6; align-self: flex-end; }
-    .mensaje-mira { text-align: left; background-color: #e6e6e6; align-self: flex-start; }
-    .mensaje { padding: 10px 15px; margin: 5px; border-radius: 16px; max-width: 75%; }
-    #avatar-mira { position: fixed; bottom: 80px; right: 20px; width: 60px; height: 60px; transition: transform 0.3s ease; cursor: grab; }
-    #avatar-mira.moviendo { transform: scale(1.1) rotate(5deg); }
-    #panel-login { position: fixed; top: 0; right: 0; width: 300px; background: #f0f0f0; height: 100%; padding: 20px; box-shadow: -2px 0 10px rgba(0,0,0,0.1); z-index: 50; }
-  </style>
-</head>
-<body class="bg-gray-100 flex flex-col h-screen">
-  <header class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-gray-800">MIRA AI</h1>
-  </header>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MIRA Chat - Innova Space</title>
+  <link rel="stylesheet" href="style.css" />
 
-  <!-- Panel Login -->
-  <div id="panel-login">
-    <h2 class="text-lg font-semibold mb-2">Iniciar sesión</h2>
-    <input type="email" placeholder="Correo electrónico" id="correo" class="w-full mb-2 p-2 border rounded">
-    <input type="password" placeholder="Contraseña" id="clave" class="w-full mb-2 p-2 border rounded">
-    <button onclick="login()" class="bg-blue-500 text-white w-full p-2 rounded">Entrar</button>
-    <p class="text-sm mt-3">¿No tienes cuenta? <a href="#" class="text-blue-600 underline">Regístrate</a></p>
+  <!-- MathJax para fórmulas -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+</head>
+<body class="chat-body">
+  <!-- Avatar de MIRA -->
+  <div id="avatar-mira"></div>
+
+  <!-- Contenedor del chat -->
+  <div class="chat-container">
+    <div class="chat-header">MIRA - Asistente Educativa</div>
+
+    <div id="chat-messages" class="chat-messages">
+      <!-- Mensajes dinámicos aquí -->
+    </div>
+
+    <div class="typing-indicator" id="typing-indicator" style="display: none;">MIRA está escribiendo...</div>
+
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="Escribe tu mensaje..." autocomplete="off" />
+      <button id="send-btn">Enviar</button>
+    </div>
+
+    <button id="scroll-btn" class="scroll-to-bottom">⬇</button>
   </div>
 
-  <!-- Chat -->
-  <main id="chat-container" class="flex-1 overflow-y-auto flex flex-col p-4 space-y-2">
-    <div id="chat" class="flex flex-col space-y-2"></div>
-  </main>
-
-  <!-- Input -->
-  <footer class="bg-white p-4 shadow flex items-center">
-    <input id="inputMensaje" type="text" placeholder="Escribe tu mensaje..." class="flex-1 border rounded-full p-3 mr-2">
-    <input type="file" id="imagenInput" class="hidden" accept="image/*">
-    <button onclick="document.getElementById('imagenInput').click()" class="mr-2 text-gray-600">📷</button>
-    <button onclick="enviarMensaje()" class="bg-green-500 text-white px-4 py-2 rounded-full">Enviar</button>
-  </footer>
-
-  <!-- Avatar -->
-  <img id="avatar-mira" src="avatar.png" alt="Avatar de MIRA" draggable="true">
-
-  <!-- Scripts -->
+  <!-- Firebase y módulos -->
   <script type="module">
-    import { auth } from './firebase-config.js';
-    import { loginUsuario } from './auth.js';
-    import { speak } from './speak.js';
-    import { renderMensaje } from './render.js';
-    import { getResponse } from './getResponse.js';
+    import { auth, db } from './firebase-config.js';
+    import './utils/auth.js';
+    import './utils/speak.js';
+    import './utils/render.js';
+    import getResponse from './utils/getResponse.js';
+    import { saveMessage, loadMessages } from './utils/database.js';
 
-    const chat = document.getElementById('chat');
-    const input = document.getElementById('inputMensaje');
-    const avatar = document.getElementById('avatar-mira');
+    const input = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const chat = document.getElementById('chat-messages');
+    const typing = document.getElementById('typing-indicator');
+    const scrollBtn = document.getElementById('scroll-btn');
 
-    let escribiendo = document.createElement('div');
-    escribiendo.textContent = 'MIRA está escribiendo...';
-    escribiendo.className = 'mensaje mensaje-mira italic';
+    // Cargar historial al iniciar sesión
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
 
-    function enviarMensaje() {
-      const texto = input.value.trim();
-      if (!texto) return;
-
-      const div = document.createElement('div');
-      div.className = 'mensaje mensaje-usuario';
-      div.innerHTML = texto;
-      chat.appendChild(div);
-
-      input.value = '';
-      chat.appendChild(escribiendo);
-
-      getResponse(texto).then(respuesta => {
-        chat.removeChild(escribiendo);
-        renderMensaje(chat, respuesta);
-        speak(respuesta);
-      });
-    }
-
-    window.enviarMensaje = enviarMensaje;
-
-    window.login = async function() {
-      const correo = document.getElementById('correo').value;
-      const clave = document.getElementById('clave').value;
-      await loginUsuario(correo, clave);
-      document.getElementById('panel-login').style.display = 'none';
-    }
-
-    // Avatar arrastrable
-    avatar.addEventListener('mousedown', () => avatar.classList.add('moviendo'));
-    avatar.addEventListener('mouseup', () => avatar.classList.remove('moviendo'));
-    avatar.addEventListener('dragend', e => {
-      avatar.style.left = e.pageX + 'px';
-      avatar.style.top = e.pageY + 'px';
+      const name = user.displayName || user.email;
+      renderSystemMessage(`👤 Sesión iniciada como: ${name}`);
+      await loadMessages(chat);
     });
+
+    // Función para enviar mensaje
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      renderUserMessage(text);
+      input.value = "";
+      await saveMessage(text, "user");
+
+      typing.style.display = "block";
+      const miraReply = await getResponse(text);
+      typing.style.display = "none";
+
+      renderMiraMessage(miraReply);
+      await saveMessage(miraReply, "mira");
+
+      speakText(miraReply);
+    }
+
+    sendBtn.onclick = sendMessage;
+    input.addEventListener("keypress", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    scrollBtn.onclick = () => {
+      chat.scrollTop = chat.scrollHeight;
+    };
+
+    // Auto-scroll cuando se añaden mensajes
+    const observer = new MutationObserver(() => {
+      scrollBtn.style.display = (chat.scrollTop + chat.clientHeight < chat.scrollHeight - 100) ? "block" : "none";
+    });
+    observer.observe(chat, { childList: true });
+
   </script>
 </body>
 </html>
