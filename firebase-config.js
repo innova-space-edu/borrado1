@@ -3,7 +3,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Configuración de tu proyecto en Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCPNds1Tc_BYM5DYroW9-3ZzgeQV1pv0KI",
   authDomain: "innovaspaceai.firebaseapp.com",
@@ -14,10 +13,12 @@ const firebaseConfig = {
   measurementId: "G-C1RF3TZZ2X"
 };
 
-// Inicialización
+// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
+
+// Servicios disponibles
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Exportar para usar en otros archivos
+// Exporta para usar en otros archivos
 export { app, auth, db };
