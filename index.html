@@ -1,63 +1,132 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MIRA AI - Innova Space</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body class="chat-body">
-    <!-- AVATAR -->
-    <div id="avatar-container">
-      <img src="avatar.png" alt="Avatar MIRA" id="avatar-mira" />
-      <span id="avatar-name">MIRA</span>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIRA AI - Chat</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #f0f4ff, #d6e0ff);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .avatar {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .chat-box {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+    .message-area {
+      height: 500px;
+      overflow-y: auto;
+      border-radius: 10px;
+      padding: 15px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .input-box {
+      display: flex;
+      margin-top: 10px;
+    }
+    .input-box input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 30px;
+    }
+    .input-box button {
+      background: linear-gradient(to right, #7f7fd5, #86a8e7);
+      color: white;
+      padding: 10px 20px;
+      margin-left: 10px;
+      border-radius: 20px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <img src="assets/avatar-mira.png" alt="MIRA Avatar" class="avatar" id="avatar" />
+
+  <div class="chat-box">
+    <div class="message-area" id="chat"></div>
+    <div id="typing-indicator" class="text-gray-500 mt-2 hidden">MIRA está escribiendo...</div>
+
+    <div class="input-box">
+      <input type="text" id="user-input" placeholder="Escribe tu mensaje..." />
+      <button onclick="sendMessage()">Enviar</button>
+      <input type="file" id="image-upload" title="Sube una imagen" />
     </div>
 
-    <!-- INDICADOR DE ESCRITURA -->
-    <div id="typing-indicator" class="hidden">
-      <span>MIRA está escribiendo<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>
+    <div id="login-section" class="mt-8 p-6 rounded-xl bg-white shadow-md max-w-sm mx-auto">
+      <h2 class="text-xl font-bold mb-2">Iniciar sesión</h2>
+      <input type="email" id="email" placeholder="Correo electrónico" class="mb-2 w-full p-2 border rounded" />
+      <input type="password" id="password" placeholder="Contraseña" class="mb-2 w-full p-2 border rounded" />
+      <button onclick="login()" class="w-full bg-blue-500 text-white py-2 rounded">Entrar</button>
+      <p class="text-sm mt-2">&#191;No tienes cuenta? <a href="#" class="text-blue-600 underline">Regístrate</a></p>
     </div>
+  </div>
 
-    <!-- CONTENEDOR PRINCIPAL -->
-    <div class="container">
-      <div id="chat-box"></div>
+  <script type="module">
+    import { auth } from './firebase-config.js';
+    import { login } from './utils/auth.js';
+    import { speak } from './utils/speak.js';
+    import { renderMessage } from './utils/render.js';
+    import { getResponse } from './utils/getResponse.js';
 
-      <!-- INPUT MENSAJE -->
-      <form id="message-form">
-        <input
-          type="text"
-          id="user-input"
-          placeholder="Escribe tu mensaje..."
-          autocomplete="off"
-        />
-        <button type="submit">Enviar</button>
-      </form>
+    const chatContainer = document.getElementById('chat');
+    const input = document.getElementById('user-input');
+    const typingIndicator = document.getElementById('typing-indicator');
+    const imageInput = document.getElementById('image-upload');
 
-      <!-- SUBIDA DE IMÁGENES -->
-      <label id="upload-label" for="imageInput">
-        📷 <input type="file" id="imageInput" accept="image/*" />
-      </label>
-    </div>
+    window.login = login;
 
-    <!-- LOGIN -->
-    <div id="login-box" class="login-box hidden">
-      <h2>Iniciar sesión</h2>
-      <input type="email" id="login-email" placeholder="Correo electrónico" />
-      <input type="password" id="login-password" placeholder="Contraseña" />
-      <button id="login-button">Entrar</button>
-      <p>
-        ¿No tienes cuenta?
-        <a href="#" id="register-link">Regístrate</a>
-      </p>
-    </div>
+    window.sendMessage = async () => {
+      const text = input.value.trim();
+      if (!text && !imageInput.files.length) return;
 
-    <!-- SCRIPTS -->
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="utils/auth.js"></script>
-    <script type="module" src="utils/database.js"></script>
-    <script type="module" src="utils/render.js"></script>
-    <script type="module" src="utils/speak.js"></script>
-    <script type="module" src="utils/getResponse.js"></script>
-    <script type="module" src="chat.js"></script>
-  </body>
+      const userMessage = document.createElement('div');
+      userMessage.textContent = text || '[Imagen enviada]';
+      userMessage.className = 'text-right text-blue-600 my-2';
+      chatContainer.appendChild(userMessage);
+      input.value = '';
+
+      typingIndicator.classList.remove('hidden');
+
+      let response = '...';
+
+      if (imageInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const imageData = reader.result;
+          response = await getResponse(null, imageData);
+          showResponse(response);
+        };
+        reader.readAsDataURL(imageInput.files[0]);
+      } else {
+        response = await getResponse(text);
+        showResponse(response);
+      }
+    };
+
+    function showResponse(response) {
+      typingIndicator.classList.add('hidden');
+      renderMessage(response);
+      speak(response);
+    }
+  </script>
+</body>
 </html>
