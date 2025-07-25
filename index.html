@@ -1,156 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIRA - Asistente Educativo</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>MIRA - Asistente IA</title>
+  <link rel="stylesheet" href="style.css">
   <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="utils/auth.js"></script>
+  <script type="module" src="utils/render.js"></script>
+  <script type="module" src="utils/speak.js"></script>
+  <script type="module" src="utils/getResponse.js"></script>
+  <script type="module" src="utils/database.js"></script>
   <script type="module" src="chat.js" defer></script>
-  <script type="module" src="utils/auth.js" defer></script>
-  <script type="module" src="utils/render.js" defer></script>
-  <script type="module" src="utils/speak.js" defer></script>
-  <script type="module" src="utils/database.js" defer></script>
-  <script type="module" src="utils/getResponse.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom right, #1a237e, #2196f3);
-      color: white;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    #chat-container {
-      display: none;
-      flex-direction: column;
-      height: 100vh;
-      padding: 80px 20px 100px 20px;
-      box-sizing: border-box;
-    }
-
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .message {
-      max-width: 80%;
-      padding: 10px 15px;
-      border-radius: 20px;
-      font-size: 16px;
-      white-space: pre-wrap;
-    }
-
-    .user {
-      align-self: flex-end;
-      background: linear-gradient(to right, #6a11cb, #2575fc);
-      color: white;
-    }
-
-    .mira {
-      align-self: flex-start;
-      background: #f3f3f3;
-      color: #333;
-    }
-
-    #input-container {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90%;
-      max-width: 800px;
-      display: flex;
-      background: #fff;
-      border-radius: 999px;
-      padding: 5px 10px;
-    }
-
-    #user-input {
-      flex: 1;
-      border: none;
-      padding: 15px;
-      font-size: 16px;
-      border-radius: 999px;
-      outline: none;
-    }
-
-    #send-btn {
-      border: none;
-      padding: 0 20px;
-      margin-left: 10px;
-      background: linear-gradient(to right, #6a11cb, #2575fc);
-      color: white;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    #avatar {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      cursor: grab;
-      z-index: 999;
-    }
-
-    #welcome-message {
-      text-align: center;
-      margin-top: 60px;
-      font-size: 20px;
-      color: #fff;
-    }
-  </style>
 </head>
+
 <body>
+  <div class="background-gradient"></div>
 
-  <!-- Avatar flotante -->
-  <img src="avatar_mira.svg" alt="Avatar" id="avatar" />
+  <div id="avatar-container">
+    <img src="avatar_mira.svg" id="avatar" alt="Avatar" />
+    <div id="avatar-label">MIRA</div>
+  </div>
 
-  <!-- Contenedor principal del chat -->
   <div id="chat-container">
-    <div id="welcome-message">¡Hola! Soy MIRA 👋 ¿En qué puedo ayudarte hoy?</div>
     <div id="messages"></div>
-    <div id="input-container">
-      <input type="text" id="user-input" placeholder="Escribe tu pregunta aquí..." />
-      <button id="send-btn">Enviar</button>
+    <div id="typing-indicator" class="hidden">MIRA está escribiendo<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <form id="chat-form">
+      <input type="text" id="user-input" placeholder="Escribe tu mensaje..." autocomplete="off" required />
+      <button type="submit">Enviar</button>
+    </form>
+    <div id="image-upload">
+      <label for="imageInput">📷</label>
+      <input type="file" id="imageInput" accept="image/*" />
     </div>
   </div>
 
-  <script>
-    // Muestra el chat solo si el usuario ha iniciado sesión
-    import('./utils/auth.js').then(({ isUserLoggedIn }) => {
-      isUserLoggedIn().then((logged) => {
-        if (logged) {
-          document.getElementById('chat-container').style.display = 'flex';
-        } else {
-          window.location.href = "login.html";
-        }
-      });
-    });
-
-    // Avatar flotante
-    const avatar = document.getElementById("avatar");
-    let isDragging = false;
-
-    avatar.addEventListener("mousedown", () => isDragging = true);
-    avatar.addEventListener("mouseup", () => isDragging = false);
-    avatar.addEventListener("mousemove", (e) => {
-      if (isDragging) {
-        avatar.style.left = e.pageX - 30 + "px";
-        avatar.style.top = e.pageY - 30 + "px";
-      }
-    });
-  </script>
-
+  <div id="login-container" class="login-box hidden">
+    <h2>Iniciar sesión</h2>
+    <input type="email" id="email" placeholder="Correo electrónico" />
+    <input type="password" id="password" placeholder="Contraseña" />
+    <button id="login-btn">Entrar</button>
+    <p><a href="#" id="register-link">¿No tienes cuenta? Regístrate</a></p>
+  </div>
 </body>
+
 </html>
