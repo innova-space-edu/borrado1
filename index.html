@@ -1,51 +1,63 @@
 <!DOCTYPE html>
 <html lang="es">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIRA - Asistente IA</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="utils/auth.js"></script>
-  <script type="module" src="utils/render.js"></script>
-  <script type="module" src="utils/speak.js"></script>
-  <script type="module" src="utils/getResponse.js"></script>
-  <script type="module" src="utils/database.js"></script>
-  <script type="module" src="chat.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
-</head>
-
-<body>
-  <div class="background-gradient"></div>
-
-  <div id="avatar-container">
-    <img src="avatar_mira.svg" id="avatar" alt="Avatar" />
-    <div id="avatar-label">MIRA</div>
-  </div>
-
-  <div id="chat-container">
-    <div id="messages"></div>
-    <div id="typing-indicator" class="hidden">MIRA está escribiendo<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
-    <form id="chat-form">
-      <input type="text" id="user-input" placeholder="Escribe tu mensaje..." autocomplete="off" required />
-      <button type="submit">Enviar</button>
-    </form>
-    <div id="image-upload">
-      <label for="imageInput">📷</label>
-      <input type="file" id="imageInput" accept="image/*" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MIRA AI - Innova Space</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="chat-body">
+    <!-- AVATAR -->
+    <div id="avatar-container">
+      <img src="avatar.png" alt="Avatar MIRA" id="avatar-mira" />
+      <span id="avatar-name">MIRA</span>
     </div>
-  </div>
 
-  <div id="login-container" class="login-box hidden">
-    <h2>Iniciar sesión</h2>
-    <input type="email" id="email" placeholder="Correo electrónico" />
-    <input type="password" id="password" placeholder="Contraseña" />
-    <button id="login-btn">Entrar</button>
-    <p><a href="#" id="register-link">¿No tienes cuenta? Regístrate</a></p>
-  </div>
-</body>
+    <!-- INDICADOR DE ESCRITURA -->
+    <div id="typing-indicator" class="hidden">
+      <span>MIRA está escribiendo<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>
+    </div>
 
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="container">
+      <div id="chat-box"></div>
+
+      <!-- INPUT MENSAJE -->
+      <form id="message-form">
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Escribe tu mensaje..."
+          autocomplete="off"
+        />
+        <button type="submit">Enviar</button>
+      </form>
+
+      <!-- SUBIDA DE IMÁGENES -->
+      <label id="upload-label" for="imageInput">
+        📷 <input type="file" id="imageInput" accept="image/*" />
+      </label>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="login-box" class="login-box hidden">
+      <h2>Iniciar sesión</h2>
+      <input type="email" id="login-email" placeholder="Correo electrónico" />
+      <input type="password" id="login-password" placeholder="Contraseña" />
+      <button id="login-button">Entrar</button>
+      <p>
+        ¿No tienes cuenta?
+        <a href="#" id="register-link">Regístrate</a>
+      </p>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="utils/auth.js"></script>
+    <script type="module" src="utils/database.js"></script>
+    <script type="module" src="utils/render.js"></script>
+    <script type="module" src="utils/speak.js"></script>
+    <script type="module" src="utils/getResponse.js"></script>
+    <script type="module" src="chat.js"></script>
+  </body>
 </html>
